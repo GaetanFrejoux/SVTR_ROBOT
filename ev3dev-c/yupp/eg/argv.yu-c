@@ -1,0 +1,49 @@
+($__TITLE__)
+
+#include <stdarg.h>
+#include <stdio.h>
+
+($set def-fn-argv \type.\name.\type..\arg-begin..\arg-count..\arg-value..\arg-end..\body.]
+($type) ($name)( int argcnt, ... )
+{
+    ($body \type type \arg-begin ]
+        va_list argptr;
+        va_start( argptr, argcnt );
+    [\arg-count ]
+        argcnt
+    [\arg-value \type.]
+        va_arg( argptr, ($type) )
+    [\arg-end ]
+        va_end( argptr );
+    [\body )
+}
+[\set )
+
+($def-fn-argv \type int \name sumi ]
+    int result = 0;
+    ($ &arg-begin)
+    while ( ($ &arg-count)-- ) result += ($ &arg-value &type);
+    ($ &arg-end)
+    return ( result );
+[\def-fn-argv )
+
+($def-fn-argv \type double \name sumf ]
+    double result = 0;
+    ($arg-begin)
+    while ( ($arg-count)-- ) result += ($arg-value double);
+    ($arg-end)
+    return ( result );
+[\def-fn-argv )
+
+int main( void )
+{
+    ($set call-fn-argv \fn.\argv.]
+        ($fn)( ($len argv)($argv \i.[, ($i)]) )
+    [\set )
+
+    printf( "%d %.1f"
+    , ($call-fn-argv sumi (1 3 5 7))
+    , ($call-fn-argv sumf (2.0 4.0 6.0 8.0))
+    );
+    return 0;
+}

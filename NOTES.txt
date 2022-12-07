@@ -1,0 +1,5 @@
+télécharger l'image docker          : docker pull ev3dev/debian-stretch-cross
+mettre un tag sur l'image avec      : docker tag ev3dev/debian-stretch-cross ev3cc
+lancer le conteneur                 : docker run --rm -it  -v $(pwd):/src -w /src ev3cc
+compile file                        : arm-linux-gnueabi-gcc -o hello hello.c
+lancer le programme                 : qemu-arm-static -L /usr/arm-linux-gnueabi/ ./hello

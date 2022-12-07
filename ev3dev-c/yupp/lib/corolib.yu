@@ -1,0 +1,10 @@
+($!
+	($set corolib-use-c-macro 0) to generate direct C source code for coroutines,
+	($set corolib-use-c-macro 1) to generate source code based on macro definitions from "coroutine.h".
+)
+
+($import coroutine)
+
+($skip ? ($not ($0 ? ($isatom corolib-use-c-macro) | corolib-use-c-macro)))
+
+($import coroutine-h)

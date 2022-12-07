@@ -1,0 +1,3 @@
+include yupp/eg/*
+include yupp.pth
+include LICENSE

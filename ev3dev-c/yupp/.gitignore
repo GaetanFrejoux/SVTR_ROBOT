@@ -1,0 +1,7 @@
+*.ast
+*.bak
+*.json*
+*.py[cod]
+*.sublime-workspace
+
+VERSION

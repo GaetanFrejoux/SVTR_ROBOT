@@ -1,0 +1,26 @@
+($set greeting "Hello world!\n")
+
+($set name   (  Co       F              Zu           ))
+($set type   (  float    double         float        ))
+($set val    (  { pi }   (`acos( -1 ))  { 355/113 }  ))
+($set format (  "%.2f"   "%.10f"        "%.6f"       ))
+
+($set each-Pi ($range ($len name)))
+
+#include <math.h>
+#include <stdio.h>
+
+int main( void )
+{
+	($each-Pi \i.]
+		($i type) ($i name) = ($i val);
+
+	[ )
+	printf( ($greeting) );
+
+	($each-Pi \i.]
+		printf( ($"($0) = ($1)\n" ($i name) ($unq ($i format))), ($i name) );
+
+	[ )
+	return 0;
+}

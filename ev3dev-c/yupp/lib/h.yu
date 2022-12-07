@@ -1,0 +1,147 @@
+($!
+	($set hlib-light 0)
+	($import hlib)
+	($h-begin-named)
+
+	($extern) void foo( char *a );
+	($extern) char *bar ($init,,"The Blind Beggar");
+	($extern-c) int corge( double val );
+
+	($var,,bool plugh)
+	($var-init,,short fred[ 3 ],,{ 7, 11, 13 })
+
+	($var-c,,float flob)
+	($var-c-init,,char *xyzzy,,"off")
+
+	($extern-c-begin)
+	($extern) bool waldo( void );
+	($extern-c-end)
+
+	($inline) int qux( int a, b ) { return (( a > b ) ? a : b ); }
+
+	($h-end)
+)
+
+($macro h-begin (name)
+($set h-name ($upper ($name)))
+#ifndef ($h-name)_H
+#define ($h-name)_H
+
+#ifdef  ($h-name)_IMPLEMENT
+#define ($h-name)_EXT
+#define ($h-name)_INIT( ... ) \
+	= __VA_ARGS__
+
+#ifdef __cplusplus
+#define ($h-name)_EXT_C \
+	extern "C"
+#else
+#define ($h-name)_EXT_C \
+	extern
+#endif
+
+#define ($h-name)_VAR( decl ) \
+	decl
+#define ($h-name)_VAR_INIT( decl, ... ) \
+	decl = __VA_ARGS__
+
+#ifdef __cplusplus
+#define ($h-name)_VAR_C( decl ) \
+	extern "C" decl; decl
+#define ($h-name)_VAR_C_INIT( decl, ... ) \
+	extern "C" decl; decl = __VA_ARGS__
+#else
+#define ($h-name)_VAR_C( decl ) \
+	decl
+#define ($h-name)_VAR_C_INIT( decl, ... ) \
+	decl = __VA_ARGS__
+#endif
+
+#define ($h-name)_INL
+
+#else  /* ($h-name)_IMPLEMENT */
+#define ($h-name)_EXT \
+	extern
+#define ($h-name)_INIT( ... )
+
+#ifdef __cplusplus
+#define ($h-name)_EXT_C \
+	extern "C"
+#else
+#define ($h-name)_EXT_C \
+	extern
+#endif
+
+#define ($h-name)_VAR( decl ) \
+	extern decl
+#define ($h-name)_VAR_INIT( decl, ... ) \
+	extern decl
+
+#ifdef __cplusplus
+#define ($h-name)_VAR_C( decl ) \
+	extern "C" decl
+#define ($h-name)_VAR_C_INIT( decl, ... ) \
+	extern "C" decl
+#else
+#define ($h-name)_VAR_C( decl ) \
+	extern decl
+#define ($h-name)_VAR_C_INIT( decl, ... ) \
+	extern decl
+#endif
+
+#if __GNUC__ && !__GNUC_STDC_INLINE__
+#define ($h-name)_INL \
+	extern inline
+#else
+#define ($h-name)_INL \
+	inline
+#endif
+
+#endif /* ($h-name)_IMPLEMENT */
+)
+
+($macro h-end ()
+#undef ($h-name)_EXT
+#undef ($h-name)_INIT
+#undef ($h-name)_EXT_C
+#undef ($h-name)_VAR
+#undef ($h-name)_VAR_INIT
+#undef ($h-name)_VAR_C
+#undef ($h-name)_VAR_C_INIT
+#undef ($h-name)_INL
+#endif
+)
+
+($macro h-begin-named ()
+($set h-name ($__MODULE_NAME__))
+($h-begin ($__MODULE_NAME__))
+)
+
+($macro implement (name)
+#define ($upper ($name))_IMPLEMENT
+)
+
+($macro implement-named ()($implement ($__MODULE_NAME__)))
+
+($macro extern-c-begin ()
+#ifdef __cplusplus
+extern "C" {
+#endif
+)
+
+($macro extern-c-end ()
+#ifdef __cplusplus
+}
+#endif
+)
+
+($macro extern ()($h-name)_EXT)
+($macro init ( init )($h-name)_INIT( ($init) ))
+($macro extern-c ()($h-name)_EXT_C)
+
+($macro var ( dec )($h-name)_VAR( ($dec) );)
+($macro var-init ( dec init )($h-name)_VAR_INIT( ($dec), ($init) );)
+($macro var-c ( dec )($h-name)_VAR_C( ($dec) );)
+($macro var-c-init ( dec init )($h-name)_VAR_C_INIT( ($dec), ($init) );)
+
+($macro inline ()($h-name)_INL)
