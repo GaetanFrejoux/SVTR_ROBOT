@@ -137,12 +137,42 @@ int main(void) {
 		return 1;
 	}
 	// TODO: run the threads
+	
 	int quit = 0;
 	while (!quit) {
 		if (fgets(buf,256,inStream)) {
 			cmd = buf[0];
 			switch (cmd) {
-			// TODO: add every command treatment, think about using sscanf on buf to extract arguments
+			// TODO: add every command treatment, think about using sscanf on buf to extract arguments			
+			case 'q': // quit
+				quit = 1;
+				break;
+			case 'p': // power
+				int power;
+				sscanf(buf, "p %d", &power);
+				break;
+			case 'r': // reset
+				int x, y, alpha;
+				sscanf(buf, "r %d %d %d", &x, &y, &alpha);
+				break;
+			case 'm': // mode
+				int mode;
+				sscanf(buf, "m %d", &mode);
+				break;
+			case 'S': // stop
+				break;
+			case 'F': // forward
+				break;
+			case 'B': // backward
+				break;
+			case 'L': // left
+				break;
+			case 'R': // right
+				break;
+			case 'g': // goto
+				int x, y;
+				sscanf(buf, "g %d %d", &x, &y);
+				break;
 			default:
 				printf("Unrecognized command: %s\n", buf);
 			}
