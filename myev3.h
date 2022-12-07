@@ -31,7 +31,7 @@ extern uint8_t MY_RIGHT_TACHO;
 #define CMD_STOP 	0 	//!< Stops the current immediate or move to target command
 #define CMD_FORWARD 1 	//!< Immediate command, go forward until stop command
 #define CMD_BACKWARD 2	//!< Immediate command, go backward until stop command
-#define CMD_LEFT 	3 	//!< Immediate command, turn to the right until stop command
+#define CMD_LEFT 	3 	//!< Immediate command, turn to the left until stop command
 #define CMD_RIGHT	4 	//!< Immediate command, turn to the right until stop command
 #define CMD_START 	5	//!< Starts to move to the specified target, will stop when target reached or stop command
 
