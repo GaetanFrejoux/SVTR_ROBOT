@@ -238,9 +238,9 @@ int main(void)
 			}
 			case 'g': // goto
 			{
-				int x, y;
-				sscanf(buf, "g %d %d", &x, &y);
-				break;
+				target_position target;
+				sscanf(buf, "g %f %f", &target->x, &target->y);
+				MDD_generic_write(MDD_target, target);
 			}
 			default:
 				printf("Unrecognized command: %s\n", buf);
