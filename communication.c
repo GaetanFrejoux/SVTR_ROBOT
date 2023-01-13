@@ -15,6 +15,7 @@ static int socket_desc;
 
 
 int WaitClient(FILE **outStream,FILE ** inStream) {
+    printf("Waiting for incoming connections...");
 	int client_sock,client_sock2;
     struct sockaddr_in server , client;
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);

@@ -20,6 +20,8 @@
 #include "myev3.h"
 #include "workers.h"
 
+#include "bal.h" // mailbox
+
 // Shared data and mailboxes
 volatile MDD_int MDD_quit;
 volatile MDD_int MDD_power;
@@ -27,6 +29,7 @@ volatile MDD_int MDD_auto_command;
 volatile MDD_int MDD_direct_command;
 volatile MDD_generic MDD_target;
 volatile MDD_generic MDD_reset;
+volatile bal_t bal;
 
 typedef struct s_reset_position
 {
@@ -49,6 +52,7 @@ void init_comms()
 	MDD_direct_command = MDD_int_init(0);
 	MDD_target = MDD_generic_init(sizeof(target_position));
 	MDD_reset = MDD_generic_init(sizeof(reset_position));
+	bal = bal_create();
 }
 
 /**
@@ -90,7 +94,51 @@ void *sendThread(FILE *outStream)
  */
 void *directThread(void *dummy)
 {
-	// TODO : this is a bit long of a switch/case structure but it's fun
+
+	printf("Direct thread started\n");
+	int command = 1;
+
+	while(command != CMD_STOP)
+	{
+		printf("Waiting for direct command\n");
+		command = bal_get(bal);
+		printf("Direct command received: %d\n", command);
+		int power = MDD_int_read(MDD_power);
+		switch (command)
+		{
+		case CMD_STOP:
+			// TODO : stop
+			set_tacho_command_inx(MY_LEFT_TACHO,TACHO_STOP);
+			set_tacho_command_inx(MY_RIGHT_TACHO,TACHO_STOP);
+			break;
+		case CMD_FORWARD:
+			set_tacho_command_inx(MY_LEFT_TACHO,TACHO_RUN_DIRECT);
+			set_tacho_command_inx(MY_RIGHT_TACHO,TACHO_RUN_DIRECT);
+			set_tacho_duty_cycle_sp(MY_LEFT_TACHO,power);
+			set_tacho_duty_cycle_sp(MY_RIGHT_TACHO,power);
+			break;
+		case CMD_BACKWARD:
+			set_tacho_command_inx(MY_LEFT_TACHO,TACHO_RUN_DIRECT);
+			set_tacho_command_inx(MY_RIGHT_TACHO,TACHO_RUN_DIRECT);
+			set_tacho_duty_cycle_sp(MY_LEFT_TACHO,-power);
+			set_tacho_duty_cycle_sp(MY_RIGHT_TACHO,-power);
+			break;
+		case CMD_LEFT:
+				set_tacho_command_inx(MY_RIGHT_TACHO,TACHO_RUN_DIRECT);
+				set_tacho_duty_cycle_sp(MY_LEFT_TACHO,0);
+				set_tacho_duty_cycle_sp(MY_RIGHT_TACHO,power);
+			break;
+		case CMD_RIGHT:
+			set_tacho_command_inx(MY_RIGHT_TACHO,TACHO_RUN_DIRECT);
+			set_tacho_duty_cycle_sp(MY_LEFT_TACHO,power);
+			set_tacho_duty_cycle_sp(MY_RIGHT_TACHO,0);
+			break;
+		default:
+			printf("Unknown command in directThread\n");
+			break;
+		}
+	}
+	
 	return 0;
 }
 
@@ -117,6 +165,7 @@ void *deadreckoningThread(void *dummy)
 void *autoThread(void *dummy)
 {
 	// TODO : keep this as the bonus question, at the end
+	
 	return 0;
 }
 
@@ -161,19 +210,29 @@ int main(void)
 		return 1;
 	}
 	init_comms();
+	
 	printf("Ready and waiting for incoming connection...\n");
+
 	if (WaitClient(&outStream, &inStream))
 	{
+		printf("Error while waiting for client\n");
 		return 1;
 	}
-	// TODO: run the threads
 
+	printf("Client connected\n");
+
+	// run direct thread
+	pthread_t t;
+	pthread_create(&t, NULL, directThread, NULL);
+	
 	int quit = 0;
 	while (!quit)
 	{
+		printf("Waiting for command\n");
 		if (fgets(buf, 256, inStream))
 		{
 			cmd = buf[0];
+			printf("Received command: %c\n", cmd);
 			switch (cmd)
 			{
 			// TODO: add every command treatment, think about using sscanf on buf to extract arguments
@@ -189,6 +248,7 @@ int main(void)
 			{
 				int power;
 				sscanf(buf, "p %d", &power);
+				printf("power: %d\n", power);
 				MDD_int_write(MDD_power, power);
 				break;
 			}
@@ -209,6 +269,7 @@ int main(void)
 				if (mode == MODE_DIRECT)
 				{
 					MDD_int_write(MDD_direct_command, CMD_STOP);
+					bal_put(bal, CMD_STOP);
 				}
 				else if (mode == MODE_AUTO)
 				{
@@ -219,21 +280,25 @@ int main(void)
 			case 'F': // forward
 			{
 				MDD_int_write(MDD_direct_command, CMD_FORWARD);
+				bal_put(bal, CMD_FORWARD);
 				break;
 			}
 			case 'B': // backward
 			{
 				MDD_int_write(MDD_direct_command, CMD_BACKWARD);
+				bal_put(bal, CMD_BACKWARD);
 				break;
 			}
 			case 'L': // left
 			{
 				MDD_int_write(MDD_direct_command, CMD_LEFT);
+				bal_put(bal, CMD_LEFT);
 				break;
 			}
 			case 'R': // right
 			{
 				MDD_int_write(MDD_direct_command, CMD_RIGHT);
+				bal_put(bal, CMD_RIGHT);
 				break;
 			}
 			case 'g': // goto
@@ -241,6 +306,7 @@ int main(void)
 				target_position target;
 				sscanf(buf, "g %f %f", &target->x, &target->y);
 				MDD_generic_write(MDD_target, target);
+				break;
 			}
 			default:
 				printf("Unrecognized command: %s\n", buf);
